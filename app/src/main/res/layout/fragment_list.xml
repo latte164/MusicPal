@@ -5,10 +5,11 @@
     android:layout_height="match_parent"
     tools:context=".ListFragment">
 
-    <TextView
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/listRecView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment"
-        android:textSize="100sp" />
-
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingBottom="75dp"
+        android:scrollbars="vertical" />
 </FrameLayout>

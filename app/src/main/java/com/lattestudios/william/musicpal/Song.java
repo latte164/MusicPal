@@ -22,7 +22,7 @@ public class Song {
         this.name = name;
     }
 
-    public String setArtist() {
+    public String getArtist() {
         return artist;
     }
 
