@@ -1,12 +1,11 @@
 package com.lattestudios.william.musicpal;
 
+import java.util.List;
+
 public class Song {
 
     private String name,artist;
     private int thumbnail;
-
-    public Song() {
-    }
 
     public Song(String name, String artist, int thumbnail) {
         this.name = name;
