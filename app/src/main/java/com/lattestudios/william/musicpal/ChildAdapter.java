@@ -51,6 +51,8 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
 
     public void onBindViewHolder(final ChildViewHolder holder, int position) {
 
+        final int cardPos = position;
+
         Song song = songList.get(position);
         holder.title.setText(song.getName());
         holder.artist.setText("by " + song.getArtist());
@@ -60,29 +62,36 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
         holder.overflow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showPopup(holder.overflow);
+                showPopup(holder.overflow, cardPos);
             }
         });
 
     }
 
-    private void showPopup(View view) {
+    private void showPopup(View view, int position) {
+
         PopupMenu popupMenu = new PopupMenu(context, view);
         MenuInflater menuInflater = popupMenu.getMenuInflater();
         menuInflater.inflate(R.menu.song_menu, popupMenu.getMenu());
-        popupMenu.setOnMenuItemClickListener(new MenuItemClickListener());
+        popupMenu.setOnMenuItemClickListener(new MenuItemClickListener(position));
         popupMenu.show();
     }
 
     class MenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
 
-        public MenuItemClickListener(){}
+        int position;
+
+        public MenuItemClickListener(int position){
+            this.position = position;
+        }
 
         @Override
         public boolean onMenuItemClick(MenuItem menuItem) {
             switch(menuItem.getItemId()) {
                 case R.id.menu_remove_song:
-                    Toast.makeText(context, "Removed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Removed " + songList.get(position).getName(), Toast.LENGTH_SHORT).show();
+                    songList.remove(position);
+                    notifyDataSetChanged();
             }
             return false;
 
