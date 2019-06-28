@@ -2,6 +2,7 @@ package com.lattestudios.william.musicpal;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,6 +21,7 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
 
     private Context context;
     private List<Song> songList;
+    private String name;
 
     public static class ChildViewHolder extends RecyclerView.ViewHolder {
 
@@ -37,9 +39,10 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
         }
     }
 
-    public ChildAdapter(Context context, List<Song> songList) {
+    public ChildAdapter(Context context, List<Song> songList, String name) {
         this.context = context;
         this.songList = songList;
+        this.name = name;
     }
 
     @Override
@@ -90,7 +93,13 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
             switch(menuItem.getItemId()) {
                 case R.id.menu_remove_song:
                     Toast.makeText(context, "Removed " + songList.get(position).getName(), Toast.LENGTH_SHORT).show();
+
                     songList.remove(position);
+
+                    //remove song from DB
+                    SongListDAO songListDAO = AppDatabase.getInstance(context).getSongListDAO();
+                    songListDAO.update(new SongList(name, new Songs(songList)));
+
                     notifyDataSetChanged();
             }
             return false;

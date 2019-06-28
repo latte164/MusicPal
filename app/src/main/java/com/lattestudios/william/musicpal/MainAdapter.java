@@ -57,7 +57,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
         holder.viewLabel.setText(songList.name);
 
-        ChildAdapter recAdapter = new ChildAdapter(context, songList.getSongList());
+        ChildAdapter recAdapter = new ChildAdapter(context, songList.getSongList().getSongs(), songList.name);
         RecyclerView.LayoutManager recLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false);
         RecyclerView recView = holder.recyclerView;
         recView.setLayoutManager(recLayoutManager);

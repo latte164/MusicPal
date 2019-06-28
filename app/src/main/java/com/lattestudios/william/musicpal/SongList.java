@@ -1,23 +1,33 @@
 package com.lattestudios.william.musicpal;
 
-import java.util.List;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
+@Entity
 public class SongList {
 
-    List<Song> songList;
+    String songs; //was just a List<Song>
+    @PrimaryKey
+    @NonNull
     String name;
 
-    public SongList(String name, List<Song> songList) {
-        this.name = name;
-        this.songList = songList;
+    public SongList(String name, Songs songs) {
+        this(name, songs.dbConverter());
     }
 
+    public SongList(String name, String songs){
+        this.name = name;
+        this.songs = songs;
+    }
+
+    @NonNull
     public String getName() {return name;}
 
     public void setName(String name) {this.name = name;}
 
-    public List<Song> getSongList() {return songList;}
+    public Songs getSongList() {return new Songs(songs);}
 
-    public void setSongList(List<Song> songList) {this.songList = songList;}
+    public void setSongList(Songs songs) {this.songs = songs.dbConverter();}
 
 }

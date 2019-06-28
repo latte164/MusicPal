@@ -1,16 +1,28 @@
 package com.lattestudios.william.musicpal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Song {
 
-    private String name,artist;
+    private String name;
+    private String artist;
     private int thumbnail;
+
+    public Song() {
+
+    }
 
     public Song(String name, String artist, int thumbnail) {
         this.name = name;
         this.artist = artist;
         this.thumbnail = thumbnail;
+    }
+
+    public Song(String[] dbFriendlyData) {
+        name = dbFriendlyData[0];
+        artist = dbFriendlyData[1];
+        thumbnail = Integer.valueOf(dbFriendlyData[2]);
     }
 
     public String getName() {
@@ -35,6 +47,11 @@ public class Song {
 
     public void setThumbnail(int thumbnail) {
         this.thumbnail = thumbnail;
+    }
+
+    public String[] getDbFriendlyData() {
+        String[] data = {name, artist, String.valueOf(thumbnail)};
+        return data;
     }
 
 }

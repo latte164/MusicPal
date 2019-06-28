@@ -27,6 +27,9 @@ public class ListFragment extends Fragment {
 
     private List<SongList> parentList;
 
+    private AppDatabase appDb;
+    private SongListDAO songListDAO;
+
     private RecyclerView recView;
     private MainAdapter recAdapter;
     private RecyclerView.LayoutManager recLayoutManager;
@@ -41,7 +44,10 @@ public class ListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list, container, false);
 
-        createTempLists();
+        appDb = AppDatabase.getInstance(getActivity().getApplicationContext());
+        songListDAO = appDb.getSongListDAO();
+        createTempLists(); //only here for testing while search is unimplemented
+        parentList = songListDAO.getSongLists();
 
         recAdapter = new MainAdapter(getActivity().getApplicationContext(), parentList);
         recLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
@@ -62,7 +68,6 @@ public class ListFragment extends Fragment {
         List<Song> songList1 = new ArrayList<Song>();
         List<Song> songList2 = new ArrayList<Song>();
         List<Song> songList3 = new ArrayList<Song>();
-        parentList = new ArrayList<SongList>();
 
         songList1.add(new Song("Titus Was Born", "Young the Giant", R.drawable.thumbnail1));
         songList1.add(new Song("Oblivion", "Young the Giant", R.drawable.thumbnail2));
@@ -77,9 +82,9 @@ public class ListFragment extends Fragment {
         songList3.add(new Song("Titus Was Born", "Young the Giant", R.drawable.thumbnail1));
         songList3.add(new Song("Titus Was Born", "Young the Giant", R.drawable.thumbnail1));
 
-        parentList.add(new SongList("Indie 1", songList1));
-        parentList.add(new SongList("Indie 100000", songList2));
-        parentList.add(new SongList("Indie Ok", songList3));
+        songListDAO.insert(new SongList("Indie 1", new Songs(songList1)));
+        songListDAO.insert(new SongList("Indie 100000", new Songs(songList2)));
+        songListDAO.insert(new SongList("Indie Ok", new Songs(songList3)));
 
     }
 
