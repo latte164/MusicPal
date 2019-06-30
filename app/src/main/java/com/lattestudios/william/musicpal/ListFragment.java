@@ -46,7 +46,7 @@ public class ListFragment extends Fragment {
 
         appDb = AppDatabase.getInstance(getActivity().getApplicationContext());
         songListDAO = appDb.getSongListDAO();
-        createTempLists(); //only here for testing while search is unimplemented
+        //createTempLists(); //only here for testing while search is unimplemented
         parentList = songListDAO.getSongLists();
 
         recAdapter = new MainAdapter(getActivity().getApplicationContext(), parentList);
