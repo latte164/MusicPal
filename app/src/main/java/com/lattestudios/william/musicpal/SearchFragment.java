@@ -1,27 +1,19 @@
 package com.lattestudios.william.musicpal;
 
-
-import android.os.AsyncTask;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Base64;
+
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import static java.net.Proxy.Type.HTTP;
-
+import static android.content.Context.MODE_PRIVATE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,49 +25,48 @@ public class SearchFragment extends Fragment {
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_search, container, false);
 
-        new NetworkConnection().execute();
+        Boolean useSpotify = Boolean.valueOf(view.getContext().getSharedPreferences("appPrefs", MODE_PRIVATE)
+                .getString("spotify_approved", "false"));
+        if(useSpotify)
+            ((MainActivity)getActivity()).getSpotifyAuth();
+        else
+            spotifyAlertDialog(view.getContext());
 
         return view;
 
     }
 
-    class NetworkConnection extends AsyncTask<String, Integer, Integer> {
+    private void spotifyAlertDialog(final Context context) {
 
-        @Override
-        protected Integer doInBackground(String... strings) {
+        final MainActivity main = ((MainActivity)getActivity());
 
-            try {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Spotify Authorization");
+        builder.setMessage("Would you like to allow Music Pal to access Spotify? Spotify is only ever used by Music Pal to implement search into our app, making usage more seamless. You can always disable this later through Music Pal or Spotify.");
 
-                String IDs = "6691f9009eee484fb60ce667ddf87138:7b2984ff7f7a4365b1e4e71c0ce5e05f";
-                String basicAuth = new String(Base64.encode(IDs.getBytes(), Base64.DEFAULT));
-
-                String url = "https://accounts.spotify.com/api/token";
-                CloseableHttpClient client = HttpClients.createDefault();
-                HttpPost post = new HttpPost(url);
-
-                post.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
-                post.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + basicAuth);
-                StringEntity data = new StringEntity("grant_type=client_credentials");
-                post.setEntity(data);
-
-                HttpResponse response = client.execute(post);
-
-                Log.e("Connection code", String.valueOf(response));
-
-            } catch(Exception e) {
-                Log.e("Printing stack", "printing stack ====================================================");
-                e.printStackTrace();
+        builder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                context.getSharedPreferences("appPrefs", MODE_PRIVATE).edit().putString("spotify_approved", "true");
+                main.getSpotifyAuth();
             }
+        });
 
-            return null;
-        }
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                main.navigation.setSelectedItemId(R.id.navigation_lists);
+            }
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
 
     }
 
