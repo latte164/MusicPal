@@ -46,13 +46,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //reset spotify api token
+        getSharedPreferences("appPrefs", MODE_PRIVATE).edit().putString("spotify_approved", "false").apply();
+
         //action bar setup
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_USE_LOGO | ActionBar.DISPLAY_SHOW_HOME);
         getSupportActionBar().setTitle("");
         getSupportActionBar().setIcon(R.drawable.logo_whitebar);
 
         //bottom nav setup
-        navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         fm.beginTransaction().add(R.id.main_container, listFragment).commit();
@@ -68,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
 
             //log and store for later use
-            Log.e("Spotify Access Token", "Token received successfully.");
             getSharedPreferences("appPrefs", MODE_PRIVATE)
                     .edit().putString("spotify_token", response.getAccessToken()).apply();
 
@@ -86,10 +88,6 @@ public class MainActivity extends AppCompatActivity {
                         "com.lattestudios.musicpal://auth");
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, 200, request);
-    }
-
-    public void switchToList() {
-        fm.beginTransaction().setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right).replace(R.id.main_container, listFragment).commit();
     }
 
 }
