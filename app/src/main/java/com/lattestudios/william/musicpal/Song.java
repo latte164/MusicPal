@@ -1,8 +1,5 @@
 package com.lattestudios.william.musicpal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Song {
 
     private String name;
@@ -20,6 +17,9 @@ public class Song {
     }
 
     public Song(String[] dbFriendlyData) {
+        if(dbFriendlyData.length < 3)
+            return;
+
         name = dbFriendlyData[0];
         artist = dbFriendlyData[1];
         thumbnail = Integer.valueOf(dbFriendlyData[2]);

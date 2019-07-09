@@ -1,5 +1,6 @@
 package com.lattestudios.william.musicpal;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -7,18 +8,23 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
-    final Fragment listFragment= new ListFragment();
-    final Fragment searchFragment = new SearchFragment();
+    final ListFragment listFragment = new ListFragment();
+    final SearchFragment searchFragment = new SearchFragment();
     final FragmentManager fm = getSupportFragmentManager();
     BottomNavigationView navigation;
 
@@ -62,6 +68,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.add_button, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.addbutton) {
+            addPlaylistAlertDialog();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     //method for getting spotify access token
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -88,6 +108,35 @@ public class MainActivity extends AppCompatActivity {
                         "com.lattestudios.musicpal://auth");
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, 200, request);
+    }
+
+    public void addPlaylistAlertDialog() {
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("Create New Playlist");
+        b.setMessage("Enter Playlist Name");
+
+        final EditText editText = new EditText(this);
+        b.setView(editText);
+
+        b.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                SongList newSongList = new SongList(editText.getText().toString());
+
+                SongListDAO songListDAO = AppDatabase.getInstance(getApplicationContext()).getSongListDAO();
+                songListDAO.insert(newSongList);
+
+                listFragment.parentList.add(newSongList);
+
+                dialog.dismiss();
+
+            }
+        });
+
+        b.show();
+
     }
 
 }

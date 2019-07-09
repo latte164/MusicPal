@@ -1,6 +1,7 @@
 package com.lattestudios.william.musicpal;
 
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
@@ -11,6 +12,11 @@ public class SongList {
     @PrimaryKey
     @NonNull
     String name;
+
+    @Ignore
+    public SongList(String name) {
+        this(name, new Songs());
+    }
 
     public SongList(String name, Songs songs) {
         this(name, songs.dbConverter());

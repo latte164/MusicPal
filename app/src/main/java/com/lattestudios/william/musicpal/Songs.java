@@ -9,6 +9,11 @@ public class Songs {
     private final String SONG_SEP_KEY = "`#";
     private List<Song> songs;
 
+    public Songs() {
+        this.songs = new ArrayList<Song>();
+        this.songs.add(new Song("Add New Songs!", "Autofill", R.drawable.empty_thumbnail));
+    }
+
     public Songs(List<Song> songs) {
         this.songs = songs;
     }
@@ -27,6 +32,14 @@ public class Songs {
 
     public void setSongs(List<Song> songs) {
         this.songs = songs;
+    }
+
+    public void addSong(Song song) {
+
+        if(songs.size() == 1 && songs.get(0).getName().equals("Add New Songs!"))
+            songs.remove(0);
+
+        songs.add(song);
     }
 
     public String dbConverter() {

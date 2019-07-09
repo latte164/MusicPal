@@ -3,25 +3,29 @@ package com.lattestudios.william.musicpal;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 
-import android.util.Log;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import javax.net.ssl.HttpsURLConnection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TracksPager;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -34,7 +38,17 @@ import static android.content.Context.MODE_PRIVATE;
 public class SearchFragment extends Fragment {
 
     static Context context;
-    SpotifyApi api;
+    View v;
+
+    private SpotifyApi api;
+
+    private ImageButton searchButton;
+    private EditText searchText;
+    private RecyclerView searchRecView;
+
+    private RecyclerView recView;
+    private SearchAdapter recAdapter;
+    private RecyclerView.LayoutManager recLayoutManager;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -44,20 +58,34 @@ public class SearchFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_search, container, false);
-        context = view.getContext();
+        v = inflater.inflate(R.layout.fragment_search, container, false);
+        context = v.getContext();
 
-        Boolean useSpotify = Boolean.valueOf(view.getContext().getSharedPreferences("appPrefs", MODE_PRIVATE)
+        searchButton = v.findViewById(R.id.searchButton);
+        searchText = v.findViewById(R.id.searchText);
+        searchRecView = v.findViewById(R.id.searchRecView);
+
+        Boolean useSpotify = Boolean.valueOf(v.getContext().getSharedPreferences("appPrefs", MODE_PRIVATE)
                 .getString("spotify_approved", "false"));
 
         if(!useSpotify)
-            spotifyAlertDialog(view.getContext());
+            spotifyAlertDialog(v.getContext());
 
         api = new SpotifyApi();
 
-        doSearch();
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-        return view;
+                doSearch(searchText.getText().toString());
+
+                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(searchText.getWindowToken(), InputMethodManager.RESULT_UNCHANGED_SHOWN);
+
+            }
+        });
+
+        return v;
 
     }
 
@@ -89,7 +117,7 @@ public class SearchFragment extends Fragment {
 
     }
 
-    private void doSearch() {
+    private void doSearch(String songName) {
 
         while(context.getSharedPreferences("appPrefs", MODE_PRIVATE).getString("spotify_token", null) == (null)) {
             try {
@@ -101,21 +129,42 @@ public class SearchFragment extends Fragment {
 
 
         final String token = context.getSharedPreferences("appPrefs", MODE_PRIVATE).getString("spotify_token", null);
-        Log.e("Token: ", token);
         api.setAccessToken(token);
 
         SpotifyService spotify = api.getService();
-        spotify.searchArtists("COIN", new Callback<ArtistsPager>() {
+        spotify.searchTracks(songName, new Callback<TracksPager>() {
             @Override
-            public void success(ArtistsPager artistsPager, Response response) {
-                Log.e("Success: ", artistsPager.artists.items.get(0).name);
+            public void success(TracksPager tracksPager, Response response) {
+
+                List<Song> songList = tracksToSongs(tracksPager.tracks.items);
+
+                //fill rec view
+                recAdapter = new SearchAdapter(songList, context);
+                recLayoutManager = new GridLayoutManager(context, 2);
+                recView = v.findViewById(R.id.searchRecView);
+                recView.setLayoutManager(recLayoutManager);
+                recView.setItemAnimator(new DefaultItemAnimator());
+                recView.setAdapter(recAdapter);
+
             }
 
             @Override
             public void failure(RetrofitError error) {
-                Log.e("Spotify Failure", "Search was not successful: " + error.getBody() + "   " + error.getResponse());
+
             }
         });
+    }
+
+    private List<Song> tracksToSongs(List<Track> trackList) {
+        List<Song> newList = new ArrayList<Song>();
+
+        int[] thumbnails = {R.drawable.thumbnail1, R.drawable.thumbnail2};
+
+        for(Track t : trackList)
+            newList.add(new Song(t.name, t.artists.get(0).name, thumbnails[new Random().nextInt(2)]));
+
+        return newList;
+
     }
 
 }

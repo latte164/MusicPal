@@ -1,8 +1,9 @@
 package com.lattestudios.william.musicpal;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,18 +18,17 @@ import com.bumptech.glide.Glide;
 
 import java.util.List;
 
-public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHolder> {
+public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.SearchViewHolder> {
 
-    private Context context;
     private List<Song> songList;
-    private String name;
+    private Context context;
 
-    public static class ChildViewHolder extends RecyclerView.ViewHolder {
+    public static class SearchViewHolder extends RecyclerView.ViewHolder {
 
         public TextView title, artist;
         public ImageView thumbnail, overflow;
 
-        public ChildViewHolder(View v) {
+        public SearchViewHolder(View v) {
             super(v);
 
             title = v.findViewById(R.id.song_title);
@@ -39,20 +39,19 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
         }
     }
 
-    public ChildAdapter(Context context, List<Song> songList, String name) {
+    public SearchAdapter(List<Song> songList, Context context) {
         this.context = context;
         this.songList = songList;
-        this.name = name;
     }
 
     @Override
-    public ChildViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public SearchViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.song_card, parent, false);
-        return new ChildViewHolder(itemView);
+        return new SearchViewHolder(itemView);
     }
 
-    public void onBindViewHolder(final ChildViewHolder holder, int position) {
+    public void onBindViewHolder(final SearchViewHolder holder, int position) {
 
         final int cardPos = position;
 
@@ -75,7 +74,7 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
 
         PopupMenu popupMenu = new PopupMenu(context, view);
         MenuInflater menuInflater = popupMenu.getMenuInflater();
-        menuInflater.inflate(R.menu.song_menu, popupMenu.getMenu());
+        menuInflater.inflate(R.menu.search_menu, popupMenu.getMenu());
         popupMenu.setOnMenuItemClickListener(new MenuItemClickListener(position));
         popupMenu.show();
     }
@@ -91,16 +90,10 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
         @Override
         public boolean onMenuItemClick(MenuItem menuItem) {
             switch(menuItem.getItemId()) {
-                case R.id.menu_remove_song:
-                    Toast.makeText(context, "Removed " + songList.get(position).getName(), Toast.LENGTH_SHORT).show();
+                case R.id.menu_add_song:
 
-                    songList.remove(position);
+                    addingAlertDialog(position);
 
-                    //remove song from DB
-                    SongListDAO songListDAO = AppDatabase.getInstance(context).getSongListDAO();
-                    songListDAO.update(new SongList(name, new Songs(songList)));
-
-                    notifyDataSetChanged();
             }
             return false;
 
@@ -113,6 +106,41 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
         return songList.size();
     }
 
+    private void addingAlertDialog(final int position) {
+
+        //get song lists and names for the dialog
+        final SongListDAO songListDAO = AppDatabase.getInstance(context.getApplicationContext()).getSongListDAO();
+        final List<SongList> songLists = songListDAO.getSongLists();
+        String[] listNames = new String[songLists.size()];
+        for(int i = 0; i < songLists.size(); i++)
+            listNames[i] = songLists.get(i).name;
+
+        AlertDialog.Builder b = new AlertDialog.Builder(context);
+        b.setTitle("Pick a Playlist");
+        b.setItems(listNames, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                dialog.dismiss();
+
+                //get Songs and add new
+                Songs songs = songLists.get(which).getSongList();
+                songs.addSong(songList.get(position));
+
+                //add the new Songs object to the song list
+                SongList sl = songLists.get(which);
+                sl.setSongList(songs);
+
+                //update the updated Song List in the data base
+                songListDAO.update(sl);
+
+                Toast.makeText(context, "Added " + songList.get(position).getName(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        b.show();
+
+    }
 
 }
-
