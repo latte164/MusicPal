@@ -161,7 +161,7 @@ public class SearchFragment extends Fragment {
         int[] thumbnails = {R.drawable.thumbnail1, R.drawable.thumbnail2};
 
         for(Track t : trackList)
-            newList.add(new Song(t.name, t.artists.get(0).name, thumbnails[new Random().nextInt(2)]));
+            newList.add(new Song(t.name, t.artists.get(0).name, thumbnails[(new Random().nextInt(10))%2]));
 
         return newList;
 
