@@ -19,6 +19,9 @@
         android:ems="10"
         android:hint="Search"
         android:inputType="textPersonName"
+        android:textColor="@color/colorPrimaryDark"
+        android:textColorLink="@color/colorPrimaryDark"
+        android:backgroundTint="@color/colorPrimaryDark"
         app:layout_constraintEnd_toStartOf="@+id/searchButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -47,7 +50,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="12dp"
         android:layout_marginRight="8dp"
-        android:background="@drawable/roundedcorner"
+        android:background="@android:color/transparent"
         android:contentDescription="Search Button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

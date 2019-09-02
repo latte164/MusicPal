@@ -3,20 +3,23 @@ package com.lattestudios.william.musicpal;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +32,6 @@ import kaaes.spotify.webapi.android.models.TracksPager;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-
-import static android.content.Context.MODE_PRIVATE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -65,25 +66,33 @@ public class SearchFragment extends Fragment {
         searchText = v.findViewById(R.id.searchText);
         searchRecView = v.findViewById(R.id.searchRecView);
 
-        Boolean useSpotify = Boolean.valueOf(v.getContext().getSharedPreferences("appPrefs", MODE_PRIVATE)
+        Boolean useSpotify = Boolean.valueOf(v.getContext().getSharedPreferences("appPrefs", context.MODE_PRIVATE)
                 .getString("spotify_approved", "false"));
 
-        if(!useSpotify)
-            spotifyAlertDialog(v.getContext());
+        if(connected()) {
+            if (!useSpotify)
+                spotifyAlertDialog(v.getContext());
 
-        api = new SpotifyApi();
+            api = new SpotifyApi();
 
-        searchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            searchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
 
-                doSearch(searchText.getText().toString());
+                    doSearch(searchText.getText().toString());
 
-                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(searchText.getWindowToken(), InputMethodManager.RESULT_UNCHANGED_SHOWN);
+                    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(searchText.getWindowToken(), InputMethodManager.RESULT_UNCHANGED_SHOWN);
 
-            }
-        });
+                }
+            });
+
+        } else {
+            Toast.makeText(context, "No Network Connection", Toast.LENGTH_LONG).show();
+            ((MainActivity) getActivity()).navigation.setSelectedItemId(R.id.navigation_lists);
+        }
+
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setElevation(0);
 
         return v;
 
@@ -100,7 +109,7 @@ public class SearchFragment extends Fragment {
         builder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                context.getSharedPreferences("appPrefs", MODE_PRIVATE).edit().putString("spotify_approved", "true").apply();
+                context.getSharedPreferences("appPrefs", context.MODE_PRIVATE).edit().putString("spotify_approved", "true").apply();
                 main.getSpotifyAuth();
             }
         });
@@ -119,8 +128,16 @@ public class SearchFragment extends Fragment {
 
     private void doSearch(String songName) {
 
-        while(context.getSharedPreferences("appPrefs", MODE_PRIVATE).getString("spotify_token", null) == (null)) {
+        int counter = 0;
+        while(context.getSharedPreferences("appPrefs", context.MODE_PRIVATE).getString("spotify_token", null) == (null)) {
+            if(counter > 3) {
+                Toast.makeText(context, "Could not perform search.", Toast.LENGTH_LONG).show();
+                ((MainActivity)getActivity()).navigation.setSelectedItemId(R.id.navigation_lists);
+                return;
+            }
+
             try {
+                counter++;
                 Thread.sleep(500);
             } catch(Exception e) {
                 e.printStackTrace();
@@ -128,7 +145,7 @@ public class SearchFragment extends Fragment {
         }
 
 
-        final String token = context.getSharedPreferences("appPrefs", MODE_PRIVATE).getString("spotify_token", null);
+        final String token = context.getSharedPreferences("appPrefs", context.MODE_PRIVATE).getString("spotify_token", null);
         api.setAccessToken(token);
 
         SpotifyService spotify = api.getService();
@@ -150,7 +167,7 @@ public class SearchFragment extends Fragment {
 
             @Override
             public void failure(RetrofitError error) {
-
+                Log.e("Spotify search error: ", error.toString() + "\n\n" + error.getResponse());
             }
         });
     }
@@ -165,6 +182,12 @@ public class SearchFragment extends Fragment {
 
         return newList;
 
+    }
+
+    private boolean connected() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
     }
 
 }

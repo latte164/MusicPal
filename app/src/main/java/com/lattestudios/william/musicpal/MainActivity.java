@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -19,7 +18,7 @@ import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
-import java.util.ArrayList;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -59,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_USE_LOGO | ActionBar.DISPLAY_SHOW_HOME);
         getSupportActionBar().setTitle("");
         getSupportActionBar().setIcon(R.drawable.logo_whitebar);
+        getSupportActionBar().setElevation(0);
 
         //bottom nav setup
         navigation = findViewById(R.id.navigation);
@@ -84,15 +84,23 @@ public class MainActivity extends AppCompatActivity {
 
     //method for getting spotify access token
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
+    protected void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
+        super.onActivityResult(requestCode, resultCode, resultIntent);
+
+        Log.e("Spotify Auth", "Running login activity pt 2. result code: " + resultCode + " Request Code: " + requestCode);
 
         if(requestCode == 200){
-            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, resultIntent);
 
             //log and store for later use
-            getSharedPreferences("appPrefs", MODE_PRIVATE)
-                    .edit().putString("spotify_token", response.getAccessToken()).apply();
+            if(response.getType() == AuthenticationResponse.Type.TOKEN) {
+                Log.e("Access Token Received", response.getAccessToken());
+                getSharedPreferences("appPrefs", getApplicationContext().MODE_PRIVATE)
+                        .edit().putString("spotify_token", response.getAccessToken()).apply();
+            } else if(response.getType() == AuthenticationResponse.Type.ERROR)
+                Log.e("Spotify Access Token", "Code: " + response.getCode() + " Token failure: " + response.getError());
+            else
+                Log.e("Spotify Access Token", response.getType().name() + " " + response.getError() + " Token: " + response.getAccessToken());
 
         } else {
             Log.e("Spotify Access Token", "Token failure: " + resultCode + "   " + requestCode);
@@ -101,13 +109,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void getSpotifyAuth() {
         //spotify token setup
+        String CLIENT_ID = getString(R.string.spotify_keys).split(":")[0];
+
         AuthenticationRequest.Builder builder =
                 new AuthenticationRequest.Builder(
-                        getString(R.string.spotify_keys).split(":")[0],
+                        CLIENT_ID,
                         AuthenticationResponse.Type.TOKEN,
                         "com.lattestudios.musicpal://auth");
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, 200, request);
+        //AuthenticationClient.openLoginActivity(this, 200, request); - Not working
+        AuthenticationClient.openLoginInBrowser(this, request);
     }
 
     public void addPlaylistAlertDialog() {
@@ -125,13 +136,18 @@ public class MainActivity extends AppCompatActivity {
 
                 SongList newSongList = new SongList(editText.getText().toString());
 
-                SongListDAO songListDAO = AppDatabase.getInstance(getApplicationContext()).getSongListDAO();
-                songListDAO.insert(newSongList);
+                if(! (newSongList.getName().isEmpty()) ) {
+                    SongListDAO songListDAO = AppDatabase.getInstance(getApplicationContext()).getSongListDAO();
+                    songListDAO.insert(newSongList);
 
-                listFragment.parentList.add(newSongList);
+                    listFragment.parentList.add(newSongList);
 
-                dialog.dismiss();
+                    dialog.dismiss();
 
+                } else {
+                    Random random = new Random();
+                    newSongList.setName(String.valueOf(random.nextInt() + random.nextInt()));
+                }
             }
         });
 

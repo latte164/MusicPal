@@ -25,9 +25,6 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
-                android:paddingLeft="2dp"
-                android:paddingTop="2dp"
-                android:paddingRight="2dp"
                 android:scaleType="fitXY" />
 
             <TextView
